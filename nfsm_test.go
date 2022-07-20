@@ -7,7 +7,7 @@ import (
 	"github.com/nigzht/nfsm"
 )
 
-func TestFactory(t *testing.T) {
+func TestFactoryPurity(t *testing.T) {
 	n := nfsm.NewNfsm(context.Background(), "test", nfsm.Handlers{
 		"test": func(nfsm nfsm.Machine) (string, error) {
 			return "done", nil
@@ -19,5 +19,9 @@ func TestFactory(t *testing.T) {
 
 	nf := n.Factory(context.Background())
 
-	nf.Context()
+	n.Metadata().Set("test", "data")
+
+	if v := nf.Metadata().Get("test"); v != nil {
+		t.Errorf("Factory copy inherited data")
+	}
 }
