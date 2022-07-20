@@ -10,6 +10,10 @@ nfsm is a type of non-deterministic state machine. Next states are determined by
 go get github.com/nigzht/nfsm@latest
 ```
 
+## Documentation
+
+https://pkg.go.dev/github.com/nigzht/nfsm
+
 ## Example
 
 ```go
