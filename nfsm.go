@@ -11,10 +11,19 @@ var (
 	ErrStateMachineAlreadyRunning = errors.New("state machine is already running")
 )
 
+// Metadata provides an interface for which states can share data.
+type Metadata interface {
+	GetAll() map[string]any
+	Get(k string) any
+	Set(k string, value any)
+}
+
 // MachineCtx provides an interface for which a state can access information on its machine.
 type Machine interface {
 	// Context returns the state machines context.
 	Context() context.Context
+	// Metadata provides a way to pass data across states.
+	Metadata() Metadata
 	// Previous returns the state machines previous state.
 	Previous() string
 	// Current returns the state machines current state.
@@ -33,6 +42,8 @@ type Nfsm struct {
 
 	handlers Handlers
 
+	metadata *MetadataImpl
+
 	previous string
 	current  string
 
@@ -48,6 +59,7 @@ func NewNfsm(ctx context.Context, initial string, handlers Handlers) *Nfsm {
 	return &Nfsm{
 		initial:  initial,
 		handlers: handlers,
+		metadata: NewMetadata(),
 		ctx:      ctx,
 		cancel:   c,
 	}
@@ -102,6 +114,10 @@ func (n *Nfsm) callHandler(state string) (string, error) {
 	n.setPrevious(state)
 
 	return s, nil
+}
+
+func (n *Nfsm) Metadata() Metadata {
+	return n.metadata
 }
 
 // Previous returns the state machines previous state.
