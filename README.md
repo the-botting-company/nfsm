@@ -34,7 +34,7 @@ func main() {
 			return "determine", nil
 		},
 		"determine": func(nfsm nfsm.Machine) (string, error) {
-			fmt.Printf("current state: %s \n previous state: %s", nfsm.Current(), nfsm.Previous())
+			fmt.Printf("current state: %s \nprevious state: %s \n", nfsm.Current(), nfsm.Previous())
 
 			n := nfsm.Metadata().Get("random_number")
 
