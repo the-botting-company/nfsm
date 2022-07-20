@@ -8,7 +8,7 @@ import (
 )
 
 func TestFactory(t *testing.T) {
-	n := nfsm.NewNfsm(context.Background(), "test", "done", nfsm.Handlers{
+	n := nfsm.NewNfsm(context.Background(), "test", nfsm.Handlers{
 		"test": func(nfsm nfsm.Machine) (string, error) {
 			return "done", nil
 		},

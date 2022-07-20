@@ -30,7 +30,6 @@ type Handlers map[string]Handler
 // Nfsm represents a type of non-deterministic state machine.
 type Nfsm struct {
 	initial string
-	final   string
 
 	handlers Handlers
 
@@ -44,11 +43,10 @@ type Nfsm struct {
 }
 
 // NewNfsm creates a new instance of Nfsm.
-func NewNfsm(ctx context.Context, initial, final string, handlers Handlers) *Nfsm {
+func NewNfsm(ctx context.Context, initial string, handlers Handlers) *Nfsm {
 	ctx, c := context.WithCancel(ctx)
 	return &Nfsm{
 		initial:  initial,
-		final:    final,
 		handlers: handlers,
 		ctx:      ctx,
 		cancel:   c,
@@ -106,11 +104,6 @@ func (n *Nfsm) callHandler(state string) (string, error) {
 	return s, nil
 }
 
-// Final returns the name of the state machines final state.
-func (n *Nfsm) Final() string {
-	return n.final
-}
-
 // Previous returns the state machines previous state.
 func (n *Nfsm) Previous() string {
 	return n.previous
@@ -146,5 +139,5 @@ func (n *Nfsm) Cancel() {
 
 // Factory will create a new copy of Nfsm.
 func (n *Nfsm) Factory(ctx context.Context) *Nfsm {
-	return NewNfsm(ctx, n.initial, n.final, n.handlers)
+	return NewNfsm(ctx, n.initial, n.handlers)
 }
