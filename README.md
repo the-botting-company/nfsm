@@ -13,6 +13,19 @@ go get github.com/nigzht/nfsm@latest
 ## Example
 
 ```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"math/rand"
+	"time"
+
+	"github.com/nigzht/nfsm"
+)
+
+func main() {
 	nfsm.NewNfsm(context.Background(), "generate", nfsm.Handlers{
 		"generate": func(nfsm nfsm.Machine) (string, error) {
 			rand.Seed(time.Now().UnixNano())
@@ -21,7 +34,7 @@ go get github.com/nigzht/nfsm@latest
 			return "determine", nil
 		},
 		"determine": func(nfsm nfsm.Machine) (string, error) {
-            fmt.Printf("current state: %s \n previous state: %s", nfsm.Current(), nfsm.Previous())
+			fmt.Printf("current state: %s \n previous state: %s", nfsm.Current(), nfsm.Previous())
 
 			n := nfsm.Metadata().Get("random_number")
 
@@ -39,4 +52,6 @@ go get github.com/nigzht/nfsm@latest
 			return "", nil
 		},
 	}).Execute()
+}
+
 ```
