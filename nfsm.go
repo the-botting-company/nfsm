@@ -30,7 +30,7 @@ type Machine interface {
 	Current() string
 }
 
-// Handler performs some action during it's state defined in Handlers then returns the next state or error. Error ends the execution of the machine.
+// Handler performs some action during it's state defined in Handlers then returns the next state or error. An empty string or error ends the execution of the machine.
 type Handler func(nfsm Machine) (string, error)
 
 // Handlers maps a state to its Handler.
