@@ -9,7 +9,9 @@ type MetadataImpl struct {
 }
 
 func NewMetadata() *MetadataImpl {
-	return &MetadataImpl{}
+	return &MetadataImpl{
+		metadata: make(map[string]any),
+	}
 }
 
 func (m *MetadataImpl) GetAll() map[string]any {

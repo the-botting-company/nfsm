@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
@@ -51,6 +52,8 @@ type Nfsm struct {
 
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	statesMu sync.Mutex
 }
 
 // NewNfsm creates a new instance of Nfsm.
@@ -104,6 +107,9 @@ func (n *Nfsm) Execute() error {
 }
 
 func (n *Nfsm) callHandler(state string) (string, error) {
+	n.statesMu.Lock()
+	defer n.statesMu.Unlock()
+
 	n.setCurrent(state)
 
 	s, err := n.handlers[state](n)
