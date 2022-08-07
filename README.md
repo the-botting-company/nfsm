@@ -7,7 +7,7 @@ nfsm is a type of non-deterministic state machine. Next states are determined by
 ## Installation
 
 ```
-go get github.com/nigzht/nfsm@latest
+go get github.com/the-botting-company/nfsm@latest
 ```
 
 ## Example
