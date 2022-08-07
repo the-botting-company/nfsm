@@ -22,11 +22,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/nigzht/nfsm"
+	"github.com/the-botting-company/nfsm"
 )
 
 func main() {
-	nfsm.NewNfsm(context.Background(), "generate", nfsm.Handlers{
+	h := nfsm.Handlers{
 		"generate": func(nfsm nfsm.Machine) (string, error) {
 			rand.Seed(time.Now().UnixNano())
 
@@ -51,7 +51,11 @@ func main() {
 
 			return "", nil
 		},
-	}).Execute()
+	}
+	
+	if err := nfsm.NewNfsm(context.Background(), nfsm.NewFlow("generate", h)).Execute(); err != nil {
+		fmt.Errorf("%v", err)
+	}
 }
 
 ```

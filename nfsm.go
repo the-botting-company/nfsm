@@ -31,17 +31,9 @@ type Machine interface {
 	Current() string
 }
 
-// Handler performs some action during it's state defined in Handlers then returns the next state or error. An empty string or error ends the execution of the machine.
-type Handler func(nfsm Machine) (string, error)
-
-// Handlers maps a state to its Handler.
-type Handlers map[string]Handler
-
 // Nfsm represents a type of non-deterministic state machine.
 type Nfsm struct {
-	initial string
-
-	handlers Handlers
+	flow Flow
 
 	metadata *MetadataImpl
 
@@ -57,11 +49,10 @@ type Nfsm struct {
 }
 
 // NewNfsm creates a new instance of Nfsm.
-func NewNfsm(ctx context.Context, initial string, handlers Handlers) *Nfsm {
+func NewNfsm(ctx context.Context, flow Flow) *Nfsm {
 	ctx, c := context.WithCancel(ctx)
 	return &Nfsm{
-		initial:  initial,
-		handlers: handlers,
+		flow: flow,
 		metadata: NewMetadata(),
 		ctx:      ctx,
 		cancel:   c,
@@ -75,12 +66,13 @@ func (n *Nfsm) Execute() error {
 	}
 
 	defer atomic.SwapInt32(&n.running, 0)
+	defer n.cancel()
 
-	if n.handlers[n.initial] == nil {
-		return fmt.Errorf("state %s does not exist", n.initial)
+	if n.flow.handlers[n.flow.initial] == nil {
+		return fmt.Errorf("state %s does not exist", n.flow.initial)
 	}
 
-	next, err := n.callHandler(n.initial)
+	next, err := n.callHandler(n.flow.initial)
 	if err != nil {
 		return err
 	}
@@ -94,7 +86,7 @@ func (n *Nfsm) Execute() error {
 				return nil
 			}
 
-			if n.handlers[next] == nil {
+			if n.flow.handlers[next] == nil {
 				return fmt.Errorf("state %s does not exist", next)
 			}
 
@@ -112,7 +104,7 @@ func (n *Nfsm) callHandler(state string) (string, error) {
 
 	n.setCurrent(state)
 
-	s, err := n.handlers[state](n)
+	s, err := n.flow.handlers[state](n)
 	if err != nil {
 		return "", err
 	}
@@ -157,9 +149,4 @@ func (n *Nfsm) Context() context.Context {
 // Cancel will call the state machines CancelFunc.
 func (n *Nfsm) Cancel() {
 	n.cancel()
-}
-
-// Factory will create a new copy of Nfsm.
-func (n *Nfsm) Factory(ctx context.Context) *Nfsm {
-	return NewNfsm(ctx, n.initial, n.handlers)
 }

@@ -1,3 +1,3 @@
-module github.com/nigzht/nfsm
+module github.com/the-botting-company/nfsm
 
 go 1.18
