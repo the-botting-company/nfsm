@@ -134,3 +134,17 @@ func (n *Nfsm) Running() bool {
 func (n *Nfsm) Context() context.Context {
 	return n.ctx
 }
+
+// Reset zero values the state machine. It must not be running.
+func (n *Nfsm) Reset(ctx context.Context) error {
+	if n.Running() {
+		return ErrStateMachineRunning
+	}
+
+	n.ctx = ctx
+	n.previous = ""
+	n.current = ""
+	n.metadata = NewMetadata()
+
+	return nil
+}

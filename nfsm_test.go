@@ -126,3 +126,45 @@ func TestCancel(t *testing.T) {
 
 	c()
 }
+
+func TestReset(t *testing.T) {
+	h := nfsm.Handlers{
+		"1": func(nfsm nfsm.Machine) (string, error) {
+			nfsm.Metadata().Set("test", "hello")
+			return "2", nil
+		},
+		"2": func(nfsm nfsm.Machine) (string, error) {
+			return "", nil
+		},
+	}
+
+	ctx, c := context.WithCancel(context.Background())
+
+	n := nfsm.NewNfsm(ctx, nfsm.NewFlow("1", h))
+
+	if err := n.Execute(); err != nil {
+		t.Errorf("%v", err)
+	}
+
+	c()
+
+	f := *n
+
+	n.Reset(context.Background())
+
+	if f.Current() == n.Current() {
+		t.Errorf("reset mismatch in current")
+	}
+
+	if f.Previous() == n.Previous() {
+		t.Errorf("reset mismatch in previous")
+	}
+
+	if n.Metadata().Get("test") == "hello" {
+		t.Errorf("reset mismatch in metadata")
+	}
+
+	if n.Context().Err() != nil {
+		t.Errorf("reset mismatch in context")
+	}
+}
