@@ -35,17 +35,20 @@ type Nfsm struct {
 
 	running int32
 
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	statesMu sync.Mutex
 }
 
 // NewNfsm creates a new instance of Nfsm.
 func NewNfsm(ctx context.Context, flow *Flow) *Nfsm {
+	ct, c := context.WithCancel(ctx)
 	return &Nfsm{
 		flow:     flow,
 		metadata: NewMetadata(),
-		ctx:      ctx,
+		ctx:      ct,
+		cancel:   c,
 	}
 }
 
@@ -56,6 +59,7 @@ func (n *Nfsm) Execute() error {
 	}
 
 	defer atomic.SwapInt32(&n.running, 0)
+	defer n.cancel()
 
 	if n.flow.handlers[n.flow.initial] == nil {
 		return fmt.Errorf("state %s does not exist", n.flow.initial)
@@ -133,6 +137,11 @@ func (n *Nfsm) Running() bool {
 // Context will return the state machines context.
 func (n *Nfsm) Context() context.Context {
 	return n.ctx
+}
+
+// Cancel cancels the execution context.
+func (n *Nfsm) Cancel() {
+	n.cancel()
 }
 
 // Reset zero values the state machine. It must not be running.
