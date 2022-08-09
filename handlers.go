@@ -9,24 +9,24 @@ type Handlers map[string]Handler
 // Flow represents the flow of the state machine.
 type Flow struct {
 	// initial is the initial state of the machine.
-	initial string
+	initial  string
 	handlers Handlers
 }
 
 // NewFlow creates a new instance of Flow.
-func NewFlow(initial string, handlers Handlers) Flow {
-	return Flow{
+func NewFlow(initial string, handlers Handlers) *Flow {
+	return &Flow{
 		initial,
 		handlers,
 	}
 }
 
 // Initial returns the initial property of Flow.
-func (f Flow) Initial() string {
+func (f *Flow) Initial() string {
 	return f.initial
 }
 
 // Handlers returns the handlers property on Flow.
-func (f Flow) Handlers() Handlers {
-	return f.handlers
+func (f *Flow) Handlers() *Handlers {
+	return &f.handlers
 }

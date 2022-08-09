@@ -2,33 +2,33 @@ package nfsm
 
 import "sync"
 
-type MetadataImpl struct {
+type Metadata struct {
 	metadata map[string]any
 
 	metadataMu sync.RWMutex
 }
 
-func NewMetadata() *MetadataImpl {
-	return &MetadataImpl{
+func NewMetadata() *Metadata {
+	return &Metadata{
 		metadata: make(map[string]any),
 	}
 }
 
-func (m *MetadataImpl) GetAll() map[string]any {
+func (m *Metadata) GetAll() map[string]any {
 	m.metadataMu.RLock()
 	defer m.metadataMu.RUnlock()
 
 	return m.metadata
 }
 
-func (m *MetadataImpl) Get(k string) any {
+func (m *Metadata) Get(k string) any {
 	m.metadataMu.RLock()
 	defer m.metadataMu.RUnlock()
 
 	return m.metadata[k]
 }
 
-func (m *MetadataImpl) Set(k string, v any) {
+func (m *Metadata) Set(k string, v any) {
 	m.metadataMu.Lock()
 	defer m.metadataMu.Unlock()
 

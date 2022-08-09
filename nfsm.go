@@ -9,22 +9,15 @@ import (
 )
 
 var (
-	ErrStateMachineAlreadyRunning = errors.New("state machine is already running")
+	ErrStateMachineRunning = errors.New("state machine is running")
 )
-
-// Metadata provides an interface for which states can share data.
-type Metadata interface {
-	GetAll() map[string]any
-	Get(k string) any
-	Set(k string, value any)
-}
 
 // MachineCtx provides an interface for which a state can access information on its machine.
 type Machine interface {
 	// Context returns the state machines context.
 	Context() context.Context
 	// Metadata provides a way to pass data across states.
-	Metadata() Metadata
+	Metadata() *Metadata
 	// Previous returns the state machines previous state.
 	Previous() string
 	// Current returns the state machines current state.
@@ -33,40 +26,36 @@ type Machine interface {
 
 // Nfsm represents a type of non-deterministic state machine.
 type Nfsm struct {
-	flow Flow
+	flow *Flow
 
-	metadata *MetadataImpl
+	metadata *Metadata
 
 	previous string
 	current  string
 
 	running int32
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx context.Context
 
 	statesMu sync.Mutex
 }
 
 // NewNfsm creates a new instance of Nfsm.
-func NewNfsm(ctx context.Context, flow Flow) *Nfsm {
-	ctx, c := context.WithCancel(ctx)
+func NewNfsm(ctx context.Context, flow *Flow) *Nfsm {
 	return &Nfsm{
-		flow: flow,
+		flow:     flow,
 		metadata: NewMetadata(),
 		ctx:      ctx,
-		cancel:   c,
 	}
 }
 
 // Execute starts the state machine. It must not be running.
 func (n *Nfsm) Execute() error {
 	if !atomic.CompareAndSwapInt32(&n.running, 0, 1) {
-		return ErrStateMachineAlreadyRunning
+		return ErrStateMachineRunning
 	}
 
 	defer atomic.SwapInt32(&n.running, 0)
-	defer n.cancel()
 
 	if n.flow.handlers[n.flow.initial] == nil {
 		return fmt.Errorf("state %s does not exist", n.flow.initial)
@@ -79,7 +68,7 @@ func (n *Nfsm) Execute() error {
 
 	for {
 		select {
-		case <-n.Context().Done():
+		case <-n.ctx.Done():
 			return nil
 		default:
 			if next == "" {
@@ -114,7 +103,7 @@ func (n *Nfsm) callHandler(state string) (string, error) {
 	return s, nil
 }
 
-func (n *Nfsm) Metadata() Metadata {
+func (n *Nfsm) Metadata() *Metadata {
 	return n.metadata
 }
 
@@ -144,9 +133,4 @@ func (n *Nfsm) Running() bool {
 // Context will return the state machines context.
 func (n *Nfsm) Context() context.Context {
 	return n.ctx
-}
-
-// Cancel will call the state machines CancelFunc.
-func (n *Nfsm) Cancel() {
-	n.cancel()
 }
