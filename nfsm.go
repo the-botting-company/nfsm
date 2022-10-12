@@ -14,8 +14,6 @@ var (
 
 // MachineCtx provides an interface for which a state can access information on its machine.
 type Machine interface {
-	// Context returns the state machines context.
-	Context() context.Context
 	// Metadata provides a way to pass data across states.
 	Metadata() *Metadata
 	// Previous returns the state machines previous state.
@@ -35,22 +33,19 @@ type Nfsm struct {
 
 	running int32
 
-	ctx context.Context
-
 	statesMu sync.Mutex
 }
 
 // NewNfsm creates a new instance of Nfsm.
-func NewNfsm(ctx context.Context, flow *Flow) *Nfsm {
+func NewNfsm(flow *Flow) *Nfsm {
 	return &Nfsm{
 		flow:     flow,
 		metadata: NewMetadata(),
-		ctx:      ctx,
 	}
 }
 
 // Execute starts the state machine. It must not be running.
-func (n *Nfsm) Execute() error {
+func (n *Nfsm) Execute(ctx context.Context) error {
 	if !atomic.CompareAndSwapInt32(&n.running, 0, 1) {
 		return ErrStateMachineRunning
 	}
@@ -68,7 +63,7 @@ func (n *Nfsm) Execute() error {
 
 	for {
 		select {
-		case <-n.ctx.Done():
+		case <-ctx.Done():
 			return nil
 		default:
 			if next == "" {
@@ -79,7 +74,7 @@ func (n *Nfsm) Execute() error {
 				return fmt.Errorf("state %s does not exist", next)
 			}
 
-			next, err = n.callHandler(next)
+			next, err = n.callHandler(ctx, next)
 			if err != nil {
 				return err
 			}
@@ -87,13 +82,13 @@ func (n *Nfsm) Execute() error {
 	}
 }
 
-func (n *Nfsm) callHandler(state string) (string, error) {
+func (n *Nfsm) callHandler(ctx context.Context, state string) (string, error) {
 	n.statesMu.Lock()
 	defer n.statesMu.Unlock()
 
 	n.setCurrent(state)
 
-	s, err := n.flow.handlers[state](n)
+	s, err := n.flow.handlers[state](ctx, n)
 	if err != nil {
 		return "", err
 	}
@@ -128,9 +123,4 @@ func (n *Nfsm) setCurrent(c string) {
 // Running returns whether the machine is currently running or not.
 func (n *Nfsm) Running() bool {
 	return atomic.LoadInt32(&n.running) == 1
-}
-
-// Context will return the state machines context.
-func (n *Nfsm) Context() context.Context {
-	return n.ctx
 }

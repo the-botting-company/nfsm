@@ -1,7 +1,9 @@
 package nfsm
 
+import "context"
+
 // Handler performs some action during it's state defined in Handlers then returns the next state or error. An empty string or error ends the execution of the machine.
-type Handler func(nfsm Machine) (string, error)
+type Handler func(ctx context.Context, nfsm Machine) (string, error)
 
 // Handlers maps a state to its Handler.
 type Handlers map[string]Handler
