@@ -56,7 +56,7 @@ func (n *Nfsm) Execute(ctx context.Context) error {
 		return fmt.Errorf("state %s does not exist", n.flow.initial)
 	}
 
-	next, err := n.callHandler(n.flow.initial)
+	next, err := n.callHandler(ctx, n.flow.initial)
 	if err != nil {
 		return err
 	}
